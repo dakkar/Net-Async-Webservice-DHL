@@ -28,7 +28,8 @@ my $dhl = Net::Async::Webservice::DHL->new({
     config_file => $dhlrc,
 });
 
-$dhl->_xml_cache->printIndex;
+# debug: print out everything that the XML::Compile::Schema knows
+# $dhl->_xml_cache->printIndex;
 
 subtest 'simple' => sub {
     my $from = Net::Async::Webservice::DHL::Address->new({
