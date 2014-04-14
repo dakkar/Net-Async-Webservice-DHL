@@ -1,4 +1,6 @@
 #!perl
+use strict;
+use warnings;
 use Test::Most;
 use Net::Async::Webservice::DHL;
 use Net::Async::Webservice::DHL::Address;
@@ -7,6 +9,12 @@ use Data::Printer;
 use Future;
 #use Log::Report mode => 'DEBUG';
 
+# you need a ~/.dhlrc.conf file with two lines like:
+#
+#  username TestUserName
+#  password TestPassWord
+#
+# of course use actual values instead of TestUserName / TestPassWord
 my $dhlrc = File::Spec->catfile($ENV{HOME}, '.dhlrc.conf');
 if (not -r $dhlrc) {
     plan(skip_all=>$_);
@@ -43,14 +51,84 @@ subtest 'simple' => sub {
         shipment_value => 100,
     })->then(
         sub {
-            note p @_;
-            pass('got something');
-            return Future->wrap(1);
+            my ($response) = @_;
+            note p $response;
+            cmp_deeply(
+                $response,
+                {
+                    GetCapabilityResponse => {
+                        BkgDetails => [{
+                            DestinationServiceArea => {
+                                FacilityCode    => "LGW",
+                                ServiceAreaCode => "LGW"
+                            },
+                            OriginServiceArea      => {
+                                FacilityCode    => "LCY",
+                                ServiceAreaCode => "LCY"
+                            },
+                            QtdShp => ignore(),
+                        }],
+                        Response => ignore(),
+                        Srvs => {
+                            Srv => [{
+                                GlobalProductCode => 'N',
+                                MrkSrv => ignore(),
+                                SBTP => ignore(),
+                            }],
+                        },
+                    },
+                },
+                'response is shaped ok',
+            );
+            return Future->wrap();
         }
     )->get;
 };
 
-subtest 'fail' => sub {
+subtest 'bad address' => sub {
+    my $from = Net::Async::Webservice::DHL::Address->new({
+        country_code => 'GB',
+        postal_code => 'SE7 7RU',
+        city => 'London',
+    });
+    my $to = Net::Async::Webservice::DHL::Address->new({
+        country_code => 'GB',
+        postal_code => 'XX7 6YY',
+        city => 'London',
+    });
+
+    $dhl->get_capability({
+        from => $from,
+        to => $to,
+        is_dutiable => 0,
+        product_code => 'N',
+        currency_code => 'GBP',
+        shipment_value => 100,
+    })->then(
+        sub {
+            my ($response) = @_;
+            note p $response;
+            cmp_deeply(
+                $response,
+                {
+                    GetCapabilityResponse => {
+                        Note => [{
+                            Condition => [{
+                                ConditionCode => 3006,
+                                ConditionData => ignore(),
+                            }],
+                        }],
+                        Response => ignore(),
+                    },
+                },
+                'response signals address failure',
+            );
+            return Future->wrap();
+        }
+    )->get;
+};
+
+subtest 'parse failure response' => sub {
     my $xml = <<'XML';
 <?xml version="1.0" encoding="UTF-8"?><res:ErrorResponse xmlns:res='http://www.dhl.com' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation= 'http://www.dhl.com err-res.xsd'>
      <Response>
