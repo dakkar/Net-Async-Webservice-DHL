@@ -228,8 +228,6 @@ sub xml_request {
 
     my $request = $doc->toString(1);
 
-    ::note $request;
-
     return $self->post( $request )->then(
         sub {
             my ($response_string) = @_;
