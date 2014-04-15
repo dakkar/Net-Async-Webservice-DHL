@@ -19,13 +19,57 @@ use DateTime;
 use File::ShareDir::ProjectDistDir 'dist_dir', strict => 1;
 use 5.10.0;
 
-# ABSTRACT: DHL API client
+# ABSTRACT: DHL API client, non-blocking
+
+=head1 SYNOPSIS
+
+ use IO::Async::Loop;
+ use Net::Async::Webservice::DHL;
+ use Data::Printer;
+
+ my $loop = IO::Async::Loop->new;
+
+ my $dhl = Net::Async::Webservice::DHL->new({
+   config_file => $ENV{HOME}.'/.dhlrc.conf',
+   loop => $loop,
+ });
+
+ $dhl->get_capability({
+   from => $address_a,
+   to => $address_b,
+   is_dutiable => 0,
+   product_code => 'N',
+   currency_code => 'GBP',
+   shipment_value => 100,
+ })->then(sub {
+   my ($response) = @_;
+   p $response;
+   return Future->wrap();
+ });
+
+ $loop->run;
+
+=head1 DESCRIPTION
+
+This class implements some of the methods of the DHL XML-PI API, using
+L<Net::Async::HTTP> as a user agent. All methods that perform API
+calls return L<Future>s.
+
+=cut
 
 my %base_urls = (
     live => 'https://xmlpi-ea.dhl.com/XMLShippingServlet',
     test => 'https://xmlpitest-ea.dhl.com/XMLShippingServlet',
 );
-sub _base_urls { return {%base_urls} }
+
+=attr C<live_mode>
+
+Boolean, defaults to false. When set to true, the live API endpoint
+will be used, otherwise the test one will. Flipping this attribute
+will reset L</base_url>, so you generally don't want to touch this if
+you're using some custom API endpoint.
+
+=cut
 
 has live_mode => (
     is => 'rw',
@@ -34,17 +78,18 @@ has live_mode => (
     default => sub { 0 },
 );
 
-has base_url_test => (
-    is => 'ro',
-    isa => Str,
-    default => sub { $base_urls{test} },
-);
+=attr C<base_url>
 
-has base_url_live => (
-    is => 'ro',
-    isa => Str,
-    default => sub { $base_urls{live} },
-);
+A string. The base URL to use to send API requests to. Defaults to the
+standard DHL endpoints:
+
+=for :list
+* C<https://xmlpi-ea.dhl.com/XMLShippingServlet> for live
+* C<https://xmlpitest-ea.dhl.com/XMLShippingServlet> for testing
+
+See also L</live_mode>.
+
+=cut
 
 has base_url => (
     is => 'lazy',
@@ -60,9 +105,16 @@ sub _trigger_live_mode {
 sub _build_base_url {
     my ($self) = @_;
 
-    my $attr = 'base_url_'.($self->live_mode ? 'live' : 'test');
-    return $self->$attr;
+    return $base_urls{$self->live_mode ? 'live' : 'test'};
 }
+
+=attr C<username>
+
+=attr C<password>
+
+Strings, required. Authentication credentials.
+
+=cut
 
 has username => (
     is => 'ro',
@@ -74,6 +126,14 @@ has password => (
     isa => Str,
     required => 1,
 );
+
+=attr C<user_agent>
+
+A user agent object implementing C<do_request> and C<POST> like
+L<Net::Async::HTTP>. You can pass the C<loop> constructor parameter
+to get a default user agent.
+
+=cut
 
 has user_agent => (
     is => 'ro',
@@ -105,6 +165,24 @@ sub _build__xml_cache {
 
     return $c;
 }
+
+=method C<new>
+
+  my $dhl = Net::Async::Webservice::DHL->new({
+     loop => $loop,
+     config_file => $file_name,
+  });
+
+In addition to passing all the various attributes values, you can use
+a few shortcuts.
+
+=for :list
+= C<loop>
+a L<IO::Async::Loop>; a locally-constructer L</user_agent> will be registered to it
+= C<config_file>
+a path name; will be parsed with L<Config::Any>, and the values used as if they had been passed in to the constructor
+
+=cut
 
 around BUILDARGS => sub {
     my ($orig,$class,@args) = @_;
@@ -141,6 +219,25 @@ sub _load_config_file {
     }) unless $config;
     return $config;
 }
+
+=method C<get_capability>
+
+ $dhl->get_capability({
+   from => $address_a,
+   to => $address_b,
+   is_dutiable => 0,
+   product_code => 'N',
+   currency_code => 'GBP',
+   shipment_value => 100,
+ }) ==> ($hashref)
+
+Performs a C<GetCapability> request. Lots of values in the request are
+not filled in, this should be used essentially to check for address
+validity and little more. I'm not sure how to read the response,
+either. You get a hashref containing the "interesting" bits of the XML
+response, as judged by L<XML::Compile::Schema>.
+
+=cut
 
 sub get_capability {
     state $argcheck = compile(
@@ -286,20 +383,12 @@ sub post {
         },
         fail => sub {
             my ($exception,undef,$response,$request) = @_;
-            return Net::Async::Webservice::UPS::Exception::HTTPError->new({
+            return Net::Async::Webservice::DHL::Exception::HTTPError->new({
                 request=>$request,
                 response=>$response,
             })
         },
     );
 }
-
-=head1 SYNOPSIS
-
-  use Net::Async::Webservice::DHL;
-
-=head1 DESCRIPTION
-
-=cut
 
 1;
