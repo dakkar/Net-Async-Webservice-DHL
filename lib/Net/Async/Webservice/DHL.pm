@@ -2,7 +2,10 @@ package Net::Async::Webservice::DHL;
 use strict;
 use warnings;
 use Moo;
-use Types::Standard qw(Str Bool Object Dict Num Optional ArrayRef HashRef Undef);
+use Types::Standard qw(Str Bool Object Dict Num Optional ArrayRef HashRef Undef Optional);
+use Types::DateTime
+    DateTime => { -as => 'DateTimeT' },
+    Format => { -as => 'DTFormat' };
 use Net::Async::Webservice::DHL::Types qw(AsyncUserAgent Address);
 use Net::Async::Webservice::DHL::Exception;
 use Type::Params qw(compile);
@@ -249,29 +252,24 @@ sub get_capability {
             product_code => Str,
             currency_code => Str,
             shipment_value => Num,
+            date => Optional[DateTimeT->plus_coercions(DTFormat['ISO8601'])],
         ],
     );
     my ($self,$args) = $argcheck->(@_);
 
-    my $now = DateTime->now(time_zone => 'UTC');
+    $args->{date} //= DateTime->now(time_zone => 'UTC');
 
     my $req = {
         From => $args->{from}->as_hash,
         To => $args->{to}->as_hash,
         BkgDetails => {
             PaymentCountryCode => $args->{to}->country_code,
-            Date => $now->ymd,
-            ReadyTime => 'PT' . $now->hour . 'H' . $now->minute . 'M',
+            Date => $args->{date}->ymd,
+            ReadyTime => 'PT' . $args->{date}->hour . 'H' . $args->{date}->minute . 'M',
             DimensionUnit => 'CM',
             WeightUnit => 'KG',
             IsDutiable => ($args->{is_dutiable} ? 'Y' : 'N'),
             NetworkTypeCode => 'AL',
-            QtdShp => {
-                GlobalProductCode => $args->{product_code},
-                QtdShpExChrg => {
-                    SpecialServiceType => 'OSINFO',
-                },
-            },
         },
         Dutiable => {
             DeclaredCurrency => $args->{currency_code},
@@ -296,12 +294,12 @@ sub xml_request {
         Dict[
             data => HashRef,
             request_method => Str,
-            message_time => Optional[Str],
+            message_time => Optional[DateTimeT->plus_coercions(DTFormat['ISO8601'])],
         ],
     );
     my ($self, $args) = $argcheck->(@_);
 
-    my $now = DateTime->now(time_zone => 'UTC');
+    $args->{message_time} //= DateTime->now(time_zone => 'UTC');
 
     my $doc = XML::LibXML::Document->new('1.0','utf-8');
 
@@ -311,7 +309,7 @@ sub xml_request {
         $args->{request_method} => {
             Request => {
                 ServiceHeader => {
-                    MessageTime => ($args->{message_time} // $now->iso8601),
+                    MessageTime => $args->{message_time}->iso8601,
                     SiteID => $self->username,
                     Password => $self->password,
                 },
@@ -329,29 +327,36 @@ sub xml_request {
         sub {
             my ($response_string) = @_;
 
-            if ($response_string =~ m{<\w+:DCTResponse\b}) {
-                return Future->wrap($response_string);
+            my $response_doc = XML::LibXML->load_xml(
+                string=>\$response_string,
+                load_ext_dtd => 0,
+                expand_xincludes => 0,
+                no_network => 1,
+            );
+
+            if ($response_doc->documentElement->nodeName =~ /:DCTResponse$/) {
+                return Future->wrap($response_doc);
             }
             else {
-                return Future->new->fail($response_string);
+                return Future->new->fail($response_doc);
             }
         }
     )->then(
         sub {
-            my ($response_string) = @_;
+            my ($response_doc) = @_;
 
             my $reader = $self->_xml_cache->reader('{http://www.dhl.com}DCTResponse');
 
-            my $response = $reader->($response_string);
+            my $response = $reader->($response_doc);
 
             return Future->wrap($response);
         }
     )->else(
         sub {
-            my ($response_string) = @_;
+            my ($response_doc) = @_;
 
             my $reader = $self->_xml_cache->reader('{http://www.dhl.com}ErrorResponse');
-            my $response = $reader->($response_string);
+            my $response = $reader->($response_doc);
 
             return Future->new->fail(
                 Net::Async::Webservice::DHL::Exception::DHLError->new({

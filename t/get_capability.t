@@ -71,11 +71,20 @@ subtest 'simple' => sub {
                         }],
                         Response => ignore(),
                         Srvs => {
-                            Srv => [{
-                                GlobalProductCode => 'N',
-                                MrkSrv => ignore(),
-                                SBTP => ignore(),
-                            }],
+                            Srv => bag(
+                                {
+                                    GlobalProductCode => 'N',
+                                    MrkSrv => ignore(),
+                                },
+                                {
+                                    GlobalProductCode => 'C',
+                                    MrkSrv => ignore(),
+                                },
+                                {
+                                    GlobalProductCode => '1',
+                                    MrkSrv => ignore(),
+                                },
+                            ),
                         },
                     },
                 },

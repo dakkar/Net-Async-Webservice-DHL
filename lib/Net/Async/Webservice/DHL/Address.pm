@@ -15,13 +15,13 @@ has city => (
 has postal_code => (
     is => 'ro',
     isa => Str,
-    required => 1,
+    required => 0,
 );
 
 has country_code => (
     is => 'ro',
     isa => Str,
-    required => 0,
+    required => 1,
 );
 
 sub as_hash {
@@ -31,12 +31,14 @@ sub as_hash {
         CountryCode => (
             $self->country_code,
         ),
-        Postalcode => (
-            $self->postal_code,
-        ),
-        City => (
-            $self->city,
-        ),
+        ($self->postal_code ?
+             (Postalcode => (
+                 $self->postal_code,
+             )) : () ),
+        ($self->city ?
+             (City => (
+                 $self->city,
+             )) : () ),
     };
 }
 
