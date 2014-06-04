@@ -1,0 +1,39 @@
+POST https://xmlpitest-ea.dhl.com/XMLShippingServlet
+
+<?xml version="1.0" encoding="utf-8"?>
+<x0:DCTRequest xmlns:x0="http://www.dhl.com">
+  <GetCapability>
+    <Request>
+      <ServiceHeader>
+        <MessageTime>2014-06-04T15:46:55</MessageTime>
+        <SiteID>testid</SiteID>
+        <Password>testpass</Password>
+      </ServiceHeader>
+    </Request>
+    <From>
+      <CountryCode>GB</CountryCode>
+      <Postalcode>SE7 7RU</Postalcode>
+      <City>London</City>
+    </From>
+    <BkgDetails>
+      <PaymentCountryCode>GB</PaymentCountryCode>
+      <Date>2014-06-04</Date>
+      <ReadyTime>PT15H46M</ReadyTime>
+      <DimensionUnit>CM</DimensionUnit>
+      <WeightUnit>KG</WeightUnit>
+      <IsDutiable>N</IsDutiable>
+      <NetworkTypeCode>AL</NetworkTypeCode>
+    </BkgDetails>
+    <To>
+      <CountryCode>GB</CountryCode>
+      <Postalcode>BN1 9RF</Postalcode>
+      <City>London</City>
+    </To>
+    <Dutiable>
+      <DeclaredCurrency>GBP</DeclaredCurrency>
+      <DeclaredValue>100</DeclaredValue>
+    </Dutiable>
+  </GetCapability>
+</x0:DCTRequest>
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><res:DCTResponse xmlns:res='http://www.dhl.com' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation= 'http://www.dhl.com DCT-Response.xsd'><GetCapabilityResponse><Response><ServiceHeader><MessageTime>2014-06-04T17:46:56.630+01:00</MessageTime><SiteID>CIMGBTest</SiteID></ServiceHeader></Response><BkgDetails><OriginServiceArea><FacilityCode>LCY</FacilityCode><ServiceAreaCode>LCY</ServiceAreaCode></OriginServiceArea><DestinationServiceArea><FacilityCode>LGW</FacilityCode><ServiceAreaCode>LGW</ServiceAreaCode></DestinationServiceArea><QtdShp><GlobalProductCode>1</GlobalProductCode><LocalProductCode>V</LocalProductCode><ProductShortName>DOMESTIC EXPRESS 12:00</ProductShortName><LocalProductName>DOMESTIC EXPRESS 12:00</LocalProductName><NetworkTypeCode>TD</NetworkTypeCode><POfferedCustAgreement>N</POfferedCustAgreement><TransInd>Y</TransInd><PickupDate>2014-06-04</PickupDate><PickupCutoffTime>PT22H</PickupCutoffTime><BookingTime>PT16H</BookingTime><TotalTransitDays>1</TotalTransitDays><PickupPostalLocAddDays>0</PickupPostalLocAddDays><DeliveryPostalLocAddDays>0</DeliveryPostalLocAddDays><PickupNonDHLCourierCode> </PickupNonDHLCourierCode><DeliveryNonDHLCourierCode> </DeliveryNonDHLCourierCode><DeliveryDate>2014-06-05</DeliveryDate><DeliveryTime>PT12H</DeliveryTime><DimensionalWeight>0.000</DimensionalWeight><WeightUnit>KG</WeightUnit><PickupDayOfWeekNum>3</PickupDayOfWeekNum><DestinationDayOfWeekNum>4</DestinationDayOfWeekNum></QtdShp><QtdShp><GlobalProductCode>C</GlobalProductCode><LocalProductCode>G</LocalProductCode><ProductShortName>MEDICAL EXPRESS</ProductShortName><LocalProductName>MEDICAL EXPRESS</LocalProductName><NetworkTypeCode>TD</NetworkTypeCode><POfferedCustAgreement>Y</POfferedCustAgreement><TransInd>N</TransInd><PickupDate>2014-06-04</PickupDate><PickupCutoffTime>PT22H</PickupCutoffTime><BookingTime>PT16H</BookingTime><TotalTransitDays>1</TotalTransitDays><PickupPostalLocAddDays>0</PickupPostalLocAddDays><DeliveryPostalLocAddDays>0</DeliveryPostalLocAddDays><PickupNonDHLCourierCode> </PickupNonDHLCourierCode><DeliveryNonDHLCourierCode> </DeliveryNonDHLCourierCode><DeliveryDate>2014-06-05</DeliveryDate><DeliveryTime>PT12H</DeliveryTime><DimensionalWeight>0.000</DimensionalWeight><WeightUnit>KG</WeightUnit><PickupDayOfWeekNum>3</PickupDayOfWeekNum><DestinationDayOfWeekNum>4</DestinationDayOfWeekNum></QtdShp><QtdShp><GlobalProductCode>N</GlobalProductCode><LocalProductCode>C</LocalProductCode><ProductShortName>DOMESTIC EXPRESS</ProductShortName><LocalProductName>DOMESTIC EXPRESS</LocalProductName><NetworkTypeCode>TD</NetworkTypeCode><POfferedCustAgreement>N</POfferedCustAgreement><TransInd>Y</TransInd><PickupDate>2014-06-04</PickupDate><PickupCutoffTime>PT22H</PickupCutoffTime><BookingTime>PT16H</BookingTime><TotalTransitDays>1</TotalTransitDays><PickupPostalLocAddDays>0</PickupPostalLocAddDays><DeliveryPostalLocAddDays>0</DeliveryPostalLocAddDays><PickupNonDHLCourierCode> </PickupNonDHLCourierCode><DeliveryNonDHLCourierCode> </DeliveryNonDHLCourierCode><DeliveryDate>2014-06-05</DeliveryDate><DeliveryTime>PT23H59M</DeliveryTime><DimensionalWeight>0.000</DimensionalWeight><WeightUnit>KG</WeightUnit><PickupDayOfWeekNum>3</PickupDayOfWeekNum><DestinationDayOfWeekNum>4</DestinationDayOfWeekNum></QtdShp></BkgDetails><Srvs><Srv><GlobalProductCode>1</GlobalProductCode><MrkSrv><LocalProductCode>V</LocalProductCode><ProductShortName>DOMESTIC EXPRESS 12:00</ProductShortName><LocalProductName>DOMESTIC EXPRESS 12:00</LocalProductName><NetworkTypeCode>TD</NetworkTypeCode><POfferedCustAgreement>N</POfferedCustAgreement><TransInd>Y</TransInd></MrkSrv></Srv><Srv><GlobalProductCode>C</GlobalProductCode><MrkSrv><LocalProductCode>G</LocalProductCode><ProductShortName>MEDICAL EXPRESS</ProductShortName><LocalProductName>MEDICAL EXPRESS</LocalProductName><NetworkTypeCode>TD</NetworkTypeCode><POfferedCustAgreement>Y</POfferedCustAgreement><TransInd>N</TransInd></MrkSrv></Srv><Srv><GlobalProductCode>N</GlobalProductCode><MrkSrv><LocalProductCode>C</LocalProductCode><ProductShortName>DOMESTIC EXPRESS</ProductShortName><LocalProductName>DOMESTIC EXPRESS</LocalProductName><ProductDesc>DOMESTIC EXPRESS</ProductDesc><NetworkTypeCode>TD</NetworkTypeCode><POfferedCustAgreement>N</POfferedCustAgreement><TransInd>Y</TransInd></MrkSrv></Srv></Srvs></GetCapabilityResponse></res:DCTResponse>

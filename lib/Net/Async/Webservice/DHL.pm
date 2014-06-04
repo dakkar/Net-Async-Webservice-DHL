@@ -1,6 +1,4 @@
 package Net::Async::Webservice::DHL;
-use strict;
-use warnings;
 use Moo;
 use Types::Standard qw(Str Bool Object Dict Num Optional ArrayRef HashRef Undef Optional);
 use Types::DateTime
@@ -142,6 +140,7 @@ has user_agent => (
     is => 'ro',
     isa => AsyncUserAgent,
     required => 1,
+    coerce => AsyncUserAgent->coercion,
 );
 
 has _xml_cache => (

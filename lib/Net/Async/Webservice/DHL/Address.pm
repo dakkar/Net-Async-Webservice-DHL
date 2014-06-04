@@ -1,6 +1,4 @@
 package Net::Async::Webservice::DHL::Address;
-use strict;
-use warnings;
 use Moo;
 use 5.10.0;
 use Types::Standard qw(Str Int Bool StrictNum);
