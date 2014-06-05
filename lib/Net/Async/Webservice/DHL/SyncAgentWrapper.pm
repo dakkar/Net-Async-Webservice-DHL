@@ -39,7 +39,7 @@ sub do_request {
 
     my $response = $self->ua->request($request);
     if ($fail && ! $response->is_success) {
-        return Future->new->fail($response);
+        return Future->new->fail($response->status_line,'http',$response,$request);
     }
     return Future->wrap($response);
 }

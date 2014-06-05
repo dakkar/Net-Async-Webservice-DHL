@@ -411,34 +411,19 @@ sub xml_request {
             );
 
             if ($response_doc->documentElement->nodeName =~ /:DCTResponse$/) {
-                return Future->wrap($response_doc);
+                my $reader = $self->_xml_cache->reader('{http://www.dhl.com}DCTResponse');
+                my $response = $reader->($response_doc);
+                return Future->wrap($response);
             }
             else {
-                return Future->new->fail($response_doc);
+                my $reader = $self->_xml_cache->reader('{http://www.dhl.com}ErrorResponse');
+                my $response = $reader->($response_doc);
+                return Future->new->fail(
+                    Net::Async::Webservice::DHL::Exception::DHLError->new({
+                        error => $response->{Response}{Status}
+                    }),
+                );
             }
-        }
-    )->then(
-        sub {
-            my ($response_doc) = @_;
-
-            my $reader = $self->_xml_cache->reader('{http://www.dhl.com}DCTResponse');
-
-            my $response = $reader->($response_doc);
-
-            return Future->wrap($response);
-        }
-    )->else(
-        sub {
-            my ($response_doc) = @_;
-
-            my $reader = $self->_xml_cache->reader('{http://www.dhl.com}ErrorResponse');
-            my $response = $reader->($response_doc);
-
-            return Future->new->fail(
-                Net::Async::Webservice::DHL::Exception::DHLError->new({
-                    error => $response->{Response}{Status}
-                }),
-            );
         }
     );
 }
@@ -474,7 +459,7 @@ sub post {
             )
         },
         fail => sub {
-            my ($exception,undef,$response,$request) = @_;
+            my ($exception,undef,$response) = @_;
             return Net::Async::Webservice::DHL::Exception::HTTPError->new({
                 request=>$request,
                 response=>$response,

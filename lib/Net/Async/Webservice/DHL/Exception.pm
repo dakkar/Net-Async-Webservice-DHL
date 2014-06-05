@@ -85,6 +85,7 @@ Mentions the file name, and gives the stack trace.
 {package Net::Async::Webservice::DHL::Exception::HTTPError;
  use Moo;
  extends 'Net::Async::Webservice::DHL::Exception';
+ use Try::Tiny;
 
 =head2 C<Net::Async::Webservice::DHL::Exception::HTTPError>
 
@@ -118,7 +119,7 @@ Mentions the HTTP method, URL, response status line, and stack trace.
 
      return sprintf 'Error %sing %s: %s, at %s',
          $self->request->method,$self->request->uri,
-         $self->response->status_line,
+         (try {$self->response->status_line} catch {'no response'}),
          $self->stack_trace->as_string;
  }
 }
