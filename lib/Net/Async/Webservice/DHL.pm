@@ -422,6 +422,7 @@ sub xml_request {
                     Net::Async::Webservice::DHL::Exception::DHLError->new({
                         error => $response->{Response}{Status}
                     }),
+                    'dhl',
                 );
             }
         }
@@ -460,10 +461,10 @@ sub post {
         },
         fail => sub {
             my ($exception,undef,$response) = @_;
-            return Net::Async::Webservice::DHL::Exception::HTTPError->new({
+            return (Net::Async::Webservice::DHL::Exception::HTTPError->new({
                 request=>$request,
                 response=>$response,
-            })
+            }),'dhl');
         },
     );
 }
