@@ -1,0 +1,5 @@
+{{$NEXT}}
+ - first release
+ - requires Perl 5.10
+ - will work with IO::Async and Net::Async::HTTP, or with plain
+   LWP::UserAgent
