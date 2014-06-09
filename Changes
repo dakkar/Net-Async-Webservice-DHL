@@ -2,6 +2,7 @@
  - failed Futures now have a 'dhl' string as second element, as
    recommended by PEVANS
  - fix Perl version specification
+ - add explicit dependency on DateTime::Format::ISO8601
 
 0.01_2    2014-06-05 15:14:10+01:00 Europe/London
  - correctly handle connection failures
