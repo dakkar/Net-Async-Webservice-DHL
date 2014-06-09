@@ -1,6 +1,6 @@
 package Test::Net::Async::Webservice::DHL::NoNetwork;
 use Moo;
-use 5.10.0;
+use 5.010;
 use Future;
 use XML::Simple;
 use HTTP::Response;

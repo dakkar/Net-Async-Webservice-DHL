@@ -19,7 +19,7 @@ use namespace::autoclean;
 use Future;
 use DateTime;
 use File::ShareDir::ProjectDistDir 'dist_dir', strict => 1;
-use 5.10.0;
+use 5.010;
 
 # ABSTRACT: DHL API client, non-blocking
 

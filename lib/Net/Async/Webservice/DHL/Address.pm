@@ -1,6 +1,6 @@
 package Net::Async::Webservice::DHL::Address;
 use Moo;
-use 5.10.0;
+use 5.010;
 use Types::Standard qw(Str Int Bool StrictNum);
 use Net::Async::Webservice::DHL::Types ':types';
 
