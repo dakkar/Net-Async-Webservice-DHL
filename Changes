@@ -1,5 +1,3 @@
-{{$NEXT}}
-
 0.01_4    2014-06-10 10:43:55+01:00 Europe/London
  - do not swallow non-http exceptions
 
