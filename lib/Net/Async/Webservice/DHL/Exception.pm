@@ -105,6 +105,7 @@ The failure response returned by the user agent
 
  has request => ( is => 'ro', required => 1 );
  has response => ( is => 'ro', required => 1 );
+ has more_info => ( is => 'ro', default => '' );
 
 =head3 Methods
 
@@ -117,9 +118,10 @@ Mentions the HTTP method, URL, response status line, and stack trace.
  sub as_string {
      my ($self) = @_;
 
-     return sprintf 'Error %sing %s: %s, at %s',
+     return sprintf 'Error %sing %s: %s %s, at %s',
          $self->request->method,$self->request->uri,
          (try {$self->response->status_line} catch {'no response'}),
+         $self->more_info,
          $self->stack_trace->as_string;
  }
 }

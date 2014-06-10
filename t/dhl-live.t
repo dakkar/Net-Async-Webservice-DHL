@@ -32,6 +32,7 @@ subtest 'connection failures' => sub {
                              methods(
                                  request => isa('HTTP::Request'),
                                  response => undef,
+                                 more_info => re(qr{\bname or service not known\b}i),
                              ),
                          ),
                          'correctly failed to connect',

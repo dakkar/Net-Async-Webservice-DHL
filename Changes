@@ -1,4 +1,5 @@
 {{$NEXT}}
+ - do not swallow non-http exceptions
 
 0.01_3    2014-06-09 10:28:33+01:00 Europe/London
  - failed Futures now have a 'dhl' string as second element, as

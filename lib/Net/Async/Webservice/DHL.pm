@@ -460,10 +460,11 @@ sub post {
             )
         },
         fail => sub {
-            my ($exception,undef,$response) = @_;
+            my ($exception,$kind,$response) = @_;
             return (Net::Async::Webservice::DHL::Exception::HTTPError->new({
                 request=>$request,
                 response=>$response,
+                (($kind//'') ne 'http' ? ( more_info => "@_" ) : ()),
             }),'dhl');
         },
     );
