@@ -1,4 +1,5 @@
 {{$NEXT}}
+ - no need for Task::Weaken
 
 0.01_5    2014-06-12 16:25:33+01:00 Europe/London
  - install the share dir with the XML schema files
