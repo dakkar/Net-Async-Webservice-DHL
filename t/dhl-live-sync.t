@@ -28,7 +28,7 @@ subtest 'connection failures' => sub {
         sub { my ($fail) = @_;
               cmp_deeply($fail,
                          all(
-                             isa('Net::Async::Webservice::DHL::Exception::HTTPError'),
+                             isa('Net::Async::Webservice::Common::Exception::HTTPError'),
                              methods(
                                  request => isa('HTTP::Request'),
                                  response => isa('HTTP::Response'),

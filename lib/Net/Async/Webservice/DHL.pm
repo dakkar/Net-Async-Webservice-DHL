@@ -5,7 +5,7 @@ use Types::URI qw(Uri);
 use Types::DateTime
     DateTime => { -as => 'DateTimeT' },
     Format => { -as => 'DTFormat' };
-use Net::Async::Webservice::DHL::Types qw(AsyncUserAgent Address);
+use Net::Async::Webservice::DHL::Types qw(Address);
 use Net::Async::Webservice::DHL::Exception;
 use Type::Params qw(compile);
 use Error::TypeTiny;
@@ -161,12 +161,7 @@ default L<Net::Async::HTTP> instance.
 
 =cut
 
-has user_agent => (
-    is => 'ro',
-    isa => AsyncUserAgent,
-    required => 1,
-    coerce => AsyncUserAgent->coercion,
-);
+with 'Net::Async::Webservice::Common::WithUserAgent';
 
 has _xml_cache => (
     is => 'lazy',
@@ -223,41 +218,7 @@ BUILDARGS
 
 =cut
 
-around BUILDARGS => sub {
-    my ($orig,$class,@args) = @_;
-
-    my $ret = $class->$orig(@args);
-
-    if (my $config_file = delete $ret->{config_file}) {
-        $ret = {
-            %{_load_config_file($config_file)},
-            %$ret,
-        };
-    }
-
-    if (ref $ret->{loop} && !$ret->{user_agent}) {
-        require Net::Async::HTTP;
-        $ret->{user_agent} = Net::Async::HTTP->new();
-        $ret->{loop}->add($ret->{user_agent});
-    }
-
-    return $ret;
-};
-
-sub _load_config_file {
-    my ($file) = @_;
-    require Config::Any;
-    my $loaded = Config::Any->load_files({
-        files => [$file],
-        use_ext => 1,
-        flatten_to_hash => 1,
-    });
-    my $config = $loaded->{$file};
-    Net::Async::Webservice::DHL::Exception::ConfigError->throw({
-        file => $file,
-    }) unless $config;
-    return $config;
-}
+with 'Net::Async::Webservice::Common::WithConfigFile';
 
 =method C<get_capability>
 
@@ -399,7 +360,7 @@ sub xml_request {
 
     my $request = $doc->toString(1);
 
-    return $self->post( $request )->then(
+    return $self->post( $self->base_url, $request )->then(
         sub {
             my ($response_string) = @_;
 
@@ -436,38 +397,10 @@ sub xml_request {
 Posts the given C<$body> to the L</base_url>. If the request is
 successful, it completes the returned future with the decoded content
 of the response, otherwise it fails the future with a
-L<Net::Async::Webservice::DHL::Exception::HTTPError> instance.
+L<Net::Async::Webservice::Common::Exception::HTTPError> instance.
 
 =cut
 
-sub post {
-    state $argcheck = compile( Object, Str );
-    my ($self, $body) = $argcheck->(@_);
-
-    my $request = HTTP::Request->new(
-        POST => $self->base_url,
-        [], encode('utf-8',$body),
-    );
-    my $response_future = $self->user_agent->do_request(
-        request => $request,
-        fail_on_error => 1,
-    )->transform(
-        done => sub {
-            my ($response) = @_;
-            return $response->decoded_content(
-                default_charset => 'utf-8',
-                raise_error => 1,
-            )
-        },
-        fail => sub {
-            my ($exception,$kind,$response) = @_;
-            return (Net::Async::Webservice::DHL::Exception::HTTPError->new({
-                request=>$request,
-                response=>$response,
-                (($kind//'') ne 'http' ? ( more_info => "@_" ) : ()),
-            }),'dhl');
-        },
-    );
-}
+with 'Net::Async::Webservice::Common::WithRequestWrapper';
 
 1;
