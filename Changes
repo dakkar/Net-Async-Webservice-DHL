@@ -1,5 +1,7 @@
 {{$NEXT}}
  - no need for Task::Weaken
+ - migrate to Net::Async::Webservice::Common (not yet released, so
+   it's temporarily included in t/lib)
 
 0.01_5    2014-06-12 16:25:33+01:00 Europe/London
  - install the share dir with the XML schema files
