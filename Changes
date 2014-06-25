@@ -1,4 +1,5 @@
 {{$NEXT}}
+ - first non-dev release
 
 0.01_6    2014-06-17 17:06:14+01:00 Europe/London
  - no need for Task::Weaken
