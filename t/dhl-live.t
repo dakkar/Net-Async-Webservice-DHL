@@ -17,7 +17,6 @@ subtest 'connection failures' => sub {
         from => Net::Async::Webservice::DHL::Address->new(country_code=>'UK'),
         to => Net::Async::Webservice::DHL::Address->new(country_code=>'IT'),
         is_dutiable => 0,
-        product_code => 'N',
         currency_code => 'GBP',
         shipment_value => 1,
     })->then(

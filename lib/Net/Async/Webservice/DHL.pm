@@ -40,7 +40,6 @@ use 5.010;
    from => $address_a,
    to => $address_b,
    is_dutiable => 0,
-   product_code => 'N',
    currency_code => 'GBP',
    shipment_value => 100,
  })->then(sub {
@@ -65,7 +64,6 @@ Alternatively:
    from => $address_a,
    to => $address_b,
    is_dutiable => 0,
-   product_code => 'N',
    currency_code => 'GBP',
    shipment_value => 100,
  })->get;
@@ -226,20 +224,20 @@ with 'Net::Async::Webservice::Common::WithConfigFile';
    from => $address_a,
    to => $address_b,
    is_dutiable => 0,
-   product_code => 'N',
    currency_code => 'GBP',
    shipment_value => 100,
  }) ==> ($hashref)
 
 C<from> and C<to> are instances of
-L<Net::Async::Webservice::DHL::Address>, C<is_dutiable> is a boolean,
-C<product_code> is a DHL product code.
+L<Net::Async::Webservice::DHL::Address>, C<is_dutiable> is a boolean.
 
 Optional parameters:
 
 =for :list
 = C<date>
 the date/time for the booking, defaults to I<now>; it will converted to UTC time zone
+= C<product_code>
+a DHL product code
 
 Performs a C<GetCapability> request. Lots of values in the request are
 not filled in, this should be used essentially to check for address
@@ -259,9 +257,9 @@ sub get_capability {
             from => Address,
             to => Address,
             is_dutiable => Bool,
-            product_code => Str,
             currency_code => Str,
             shipment_value => Num,
+            product_code => Optional[Str],
             date => Optional[DateTimeT->plus_coercions(DTFormat['ISO8601'])],
         ],
     );
@@ -282,6 +280,14 @@ sub get_capability {
             WeightUnit => 'KG',
             IsDutiable => ($args->{is_dutiable} ? 'Y' : 'N'),
             NetworkTypeCode => 'AL',
+            ( defined $args->{product_code} ? (
+                QtdShp => {
+                    GlobalProductCode => $args->{product_code},
+                    QtdShpExChrg => {
+                        SpecialServiceType => 'OSINFO',
+                    },
+                },
+            ) : () ),
         },
         Dutiable => {
             DeclaredCurrency => $args->{currency_code},

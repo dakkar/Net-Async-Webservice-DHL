@@ -7,7 +7,7 @@ use File::Temp 'tempfile';
 has loop => ( is => 'ro', required => 1 );
 has user_agent => (
     is => 'lazy',
-    handles => [qw(do_request POST)],
+    handles => [qw(do_request GET POST)],
 );
 sub _build_user_agent {
     my ($self) = @_;

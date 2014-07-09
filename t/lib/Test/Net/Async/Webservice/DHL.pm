@@ -46,7 +46,6 @@ sub test_it {
             from => $from,
             to => $to,
             is_dutiable => 0,
-            product_code => 'N',
             currency_code => 'GBP',
             shipment_value => 100,
         })->then(
@@ -70,7 +69,7 @@ sub test_it {
                             }],
                             Response => ignore(),
                             Srvs => {
-                                Srv => bag(
+                                Srv => superbagof(
                                     {
                                         GlobalProductCode => 'N',
                                         MrkSrv => ignore(),
@@ -88,6 +87,49 @@ sub test_it {
                         },
                     },
                     'response is shaped ok',
+                );
+                return Future->wrap();
+            }
+        )->get;
+
+        $dhl->get_capability({
+            from => $from,
+            to => $to,
+            is_dutiable => 0,
+            product_code => 'C',
+            currency_code => 'GBP',
+            shipment_value => 100,
+        })->then(
+            sub {
+                my ($response) = @_;
+                note p $response;
+                cmp_deeply(
+                    $response,
+                    {
+                        GetCapabilityResponse => {
+                            BkgDetails => [{
+                                DestinationServiceArea => {
+                                    FacilityCode    => "LGW",
+                                    ServiceAreaCode => "LGW"
+                                },
+                                OriginServiceArea      => {
+                                    FacilityCode    => "LCY",
+                                    ServiceAreaCode => "LCY"
+                                },
+                                QtdShp => ignore(),
+                            }],
+                            Response => ignore(),
+                            Srvs => {
+                                Srv => [
+                                    superhashof({
+                                        GlobalProductCode => 'C',
+                                        MrkSrv => ignore(),
+                                    }),
+                                ],
+                            },
+                        },
+                    },
+                    'response with product_code is shaped ok',
                 );
                 return Future->wrap();
             }
@@ -110,7 +152,6 @@ sub test_it {
             from => $from,
             to => $to,
             is_dutiable => 0,
-            product_code => 'N',
             currency_code => 'GBP',
             shipment_value => 100,
         })->then(

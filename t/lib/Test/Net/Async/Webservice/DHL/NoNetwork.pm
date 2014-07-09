@@ -17,7 +17,7 @@ sub make_ignore_dates {
     state $v = Data::Visitor::Callback->new(
         value => sub {
             return ignore() if /\A\d{4}-\d{2}-\d{2}($|T| )/;
-            return ignore() if /\APT\d{2}H\d{2}M\z/;
+            return ignore() if /\APT\d{2}H\d{1,2}M\z/;
             return $_;
         },
     );
