@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.1.1     2014-07-29 11:14:40+01:00 Europe/London
  - use SingleEncoding (thanks sergeyromanov)
 
 1.1.0     2014-07-09 13:12:06+01:00 Europe/London
