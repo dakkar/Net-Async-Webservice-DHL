@@ -145,7 +145,7 @@ sub test_it {
         my $to = Net::Async::Webservice::DHL::Address->new({
             country_code => 'GB',
             postal_code => 'XX7 6YY',
-            city => 'London',
+            city => 'NotExisting',
         });
 
         $dhl->get_capability({
@@ -164,7 +164,7 @@ sub test_it {
                         GetCapabilityResponse => {
                             Note => [{
                                 Condition => [{
-                                    ConditionCode => 3006,
+                                    ConditionCode => any(3006,3021),
                                     ConditionData => ignore(),
                                 }],
                             }],

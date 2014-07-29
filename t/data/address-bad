@@ -27,7 +27,7 @@ POST https://xmlpitest-ea.dhl.com/XMLShippingServlet
     <To>
       <CountryCode>GB</CountryCode>
       <Postalcode>XX7 6YY</Postalcode>
-      <City>London</City>
+      <City>NotExisting</City>
     </To>
     <Dutiable>
       <DeclaredCurrency>GBP</DeclaredCurrency>
