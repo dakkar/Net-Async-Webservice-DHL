@@ -37,9 +37,9 @@ sub test_it {
             city => 'London',
         });
         my $to = Net::Async::Webservice::DHL::Address->new({
-            country_code => 'GB',
-            postal_code => 'BN1 9RF',
-            city => 'London',
+            country_code => 'DE',
+            postal_code => '40217',
+            city => "D\x{fc}sseldorf",
         });
 
         $dhl->get_capability({
@@ -58,8 +58,8 @@ sub test_it {
                         GetCapabilityResponse => {
                             BkgDetails => [{
                                 DestinationServiceArea => {
-                                    FacilityCode    => "LGW",
-                                    ServiceAreaCode => "LGW"
+                                    FacilityCode    => "DUS",
+                                    ServiceAreaCode => "DUS"
                                 },
                                 OriginServiceArea      => {
                                     FacilityCode    => "LCY",
@@ -71,7 +71,7 @@ sub test_it {
                             Srvs => {
                                 Srv => superbagof(
                                     {
-                                        GlobalProductCode => 'N',
+                                        GlobalProductCode => 'K',
                                         MrkSrv => ignore(),
                                     },
                                     {
@@ -79,7 +79,11 @@ sub test_it {
                                         MrkSrv => ignore(),
                                     },
                                     {
-                                        GlobalProductCode => '1',
+                                        GlobalProductCode => 'T',
+                                        MrkSrv => ignore(),
+                                    },
+                                    {
+                                        GlobalProductCode => 'U',
                                         MrkSrv => ignore(),
                                     },
                                 ),
@@ -109,8 +113,8 @@ sub test_it {
                         GetCapabilityResponse => {
                             BkgDetails => [{
                                 DestinationServiceArea => {
-                                    FacilityCode    => "LGW",
-                                    ServiceAreaCode => "LGW"
+                                    FacilityCode    => "DUS",
+                                    ServiceAreaCode => "DUS"
                                 },
                                 OriginServiceArea      => {
                                     FacilityCode    => "LCY",
