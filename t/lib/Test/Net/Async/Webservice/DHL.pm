@@ -30,7 +30,7 @@ sub test_it {
         is($dhl->base_url,$test_url,'test proxy same as before');
     };
 
-    subtest 'address validation' => sub {
+    subtest 'capability' => sub {
         my $from = Net::Async::Webservice::DHL::Address->new({
             country_code => 'GB',
             postal_code => 'SE7 7RU',
@@ -51,7 +51,6 @@ sub test_it {
         })->then(
             sub {
                 my ($response) = @_;
-                note p $response;
                 cmp_deeply(
                     $response,
                     {
@@ -106,7 +105,6 @@ sub test_it {
         })->then(
             sub {
                 my ($response) = @_;
-                note p $response;
                 cmp_deeply(
                     $response,
                     {
@@ -140,7 +138,7 @@ sub test_it {
         )->get;
     };
 
-    subtest 'bad address' => sub {
+    subtest 'capability, bad address' => sub {
         my $from = Net::Async::Webservice::DHL::Address->new({
             country_code => 'GB',
             postal_code => 'SE7 7RU',
@@ -161,7 +159,6 @@ sub test_it {
         })->then(
             sub {
                 my ($response) = @_;
-                note p $response;
                 cmp_deeply(
                     $response,
                     {
@@ -176,6 +173,83 @@ sub test_it {
                         },
                     },
                     'response signals address failure',
+                );
+                return Future->wrap();
+            }
+        )->get;
+    };
+
+    subtest 'route request' => sub {
+        my $addr = Net::Async::Webservice::DHL::Address->new({
+            country_code => 'GB',
+            postal_code => 'SE7 7RU',
+            city => 'London',
+        });
+
+        $dhl->route_request({
+            region_code => 'EU',
+            address => $addr,
+            routing_type => 'D',
+            origin_country_code => 'GB',
+        })->then(
+            sub {
+                my ($response) = @_;
+                cmp_deeply(
+                    $response,
+                    {
+                        RegionCode => 'EU',
+                        GMTNegativeIndicator => 'N',
+                        GMTOffset => any('01:00','00:00'),
+                        ServiceArea => {
+                            ServiceAreaCode => 'LCY',
+                            Description => ignore(),
+                        },
+                        Response => ignore(),
+                    },
+                    'response is shaped ok',
+                );
+                return Future->wrap();
+            },
+            sub {
+                note p @_;
+                fail 'Got an error response';
+                return Future->wrap();
+            },
+        )->get;
+
+        $addr = Net::Async::Webservice::DHL::Address->new({
+            country_code => 'GB',
+            postal_code => 'XX1 2YY',
+            city => 'London',
+        });
+
+        $dhl->route_request({
+            region_code => 'EU',
+            address => $addr,
+            routing_type => 'D',
+            origin_country_code => 'GB',
+        })->then(
+            sub {
+                note p @_;
+                fail 'Got a non-error response';
+                return Future->wrap();
+            },
+            sub {
+                my ($exception) = @_;
+                cmp_deeply(
+                    $exception,
+                    all(
+                        isa('Net::Async::Webservice::DHL::Exception::DHLError'),
+                        methods(
+                            error => superhashof({
+                                Condition => superbagof(
+                                    map { superhashof({ConditionCode=>$_}) }
+                                        qw(RT0007 RT0004),
+                                ),
+                            }),
+                        ),
+                    ),
+                    'exception is shaped ok',
                 );
                 return Future->wrap();
             }

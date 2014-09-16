@@ -20,6 +20,12 @@ sub make_ignore_dates {
             return ignore() if /\APT\d{2}H\d{1,2}M\z/;
             return $_;
         },
+        hash => sub {
+            if ($_->{MessageReference}) {
+                $_->{MessageReference} = ignore();
+            }
+            return $_;
+        },
     );
 
     return $v->visit($struct);

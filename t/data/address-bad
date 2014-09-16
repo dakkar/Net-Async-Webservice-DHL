@@ -5,7 +5,8 @@ POST https://xmlpitest-ea.dhl.com/XMLShippingServlet
   <GetCapability>
     <Request>
       <ServiceHeader>
-        <MessageTime>2014-06-04T15:46:56</MessageTime>
+        <MessageTime>2014-09-16T14:54:30</MessageTime>
+        <MessageReference>                  1410879270</MessageReference>
         <SiteID>testid</SiteID>
         <Password>testpass</Password>
       </ServiceHeader>
@@ -17,8 +18,8 @@ POST https://xmlpitest-ea.dhl.com/XMLShippingServlet
     </From>
     <BkgDetails>
       <PaymentCountryCode>GB</PaymentCountryCode>
-      <Date>2014-06-04</Date>
-      <ReadyTime>PT15H46M</ReadyTime>
+      <Date>2014-09-16</Date>
+      <ReadyTime>PT14H54M</ReadyTime>
       <DimensionUnit>CM</DimensionUnit>
       <WeightUnit>KG</WeightUnit>
       <IsDutiable>N</IsDutiable>
@@ -36,4 +37,4 @@ POST https://xmlpitest-ea.dhl.com/XMLShippingServlet
   </GetCapability>
 </x0:DCTRequest>
 
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><res:DCTResponse xmlns:res='http://www.dhl.com' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation= 'http://www.dhl.com DCT-Response.xsd'><GetCapabilityResponse><Response><ServiceHeader><MessageTime>2014-06-04T17:46:56.896+01:00</MessageTime><SiteID>CIMGBTest</SiteID></ServiceHeader></Response><Note><Condition><ConditionCode>3006</ConditionCode><ConditionData>The destination zip code XX7 6YY could be found. Please check your destination zip code parameter.</ConditionData></Condition></Note></GetCapabilityResponse></res:DCTResponse>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><res:DCTResponse xmlns:res='http://www.dhl.com' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation= 'http://www.dhl.com DCT-Response.xsd'><GetCapabilityResponse><Response><ServiceHeader><MessageTime>2014-09-16T16:54:30.713+01:00</MessageTime><MessageReference>                  1410879270</MessageReference><SiteID>testid</SiteID></ServiceHeader></Response><Note><Condition><ConditionCode>3021</ConditionCode><ConditionData>The destination country GB location postal code XX7 6YY or City NotExisting is invalid. Please check the destination country location details.</ConditionData></Condition></Note></GetCapabilityResponse></res:DCTResponse>

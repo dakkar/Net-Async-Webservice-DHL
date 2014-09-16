@@ -1157,6 +1157,27 @@
 			<xsd:element name="Password" type="Password"/>
 		</xsd:sequence>
 	</xsd:complexType>
+	<xsd:complexType name="ResponseServiceHeader">
+		<xsd:annotation>
+			<xsd:documentation>Standard routing header</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="MessageTime" type="xsd:dateTime">
+				<xsd:annotation>
+					<xsd:documentation>Time this message is sent</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MessageReference" type="MessageReferenceLax">
+				<xsd:annotation>
+					<xsd:documentation>A string, peferably number, to uniquely identify
+						individual messages. Minimum length must be 28 and maximum length
+						is 32
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SiteID" type="SiteID" />
+		</xsd:sequence>
+	</xsd:complexType>
 	<xsd:simpleType name="SiteID">
 		<xsd:annotation>
 			<xsd:documentation>Site ID used for verifying the sender</xsd:documentation>
@@ -1184,6 +1205,15 @@
 			<xsd:maxLength value="32"/>
 		</xsd:restriction>
 	</xsd:simpleType>
+	<xsd:simpleType name="MessageReferenceLax">
+		<xsd:annotation>
+			<xsd:documentation>Reference to the requested Message</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="0" />
+			<xsd:maxLength value="32" />
+		</xsd:restriction>
+	</xsd:simpleType>
 	<xsd:simpleType name="PaymentType">
 		<xsd:annotation>
 			<xsd:documentation>payment type (S:Shipper,R:Recipient,T:Third Party,C:Credit Card)</xsd:documentation>
@@ -1202,7 +1232,7 @@
 			<xsd:documentation>Generic response header</xsd:documentation>
 		</xsd:annotation>
 		<xsd:sequence>
-			<xsd:element name="ServiceHeader" type="ServiceHeader"/>
+			<xsd:element name="ServiceHeader" type="ResponseServiceHeader"/>
 		</xsd:sequence>
 	</xsd:complexType>
 	<xsd:complexType name="Status">
@@ -1400,7 +1430,7 @@
 			<xsd:documentation>Generic response header</xsd:documentation>
 		</xsd:annotation>
 		<xsd:sequence>
-			<xsd:element name="ServiceHeader" type="ServiceHeader"/>
+			<xsd:element name="ServiceHeader" type="ResponseServiceHeader"/>
 			<xsd:element name="Status" type="Status"/>
 		</xsd:sequence>
 	</xsd:complexType>

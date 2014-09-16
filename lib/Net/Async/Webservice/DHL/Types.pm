@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Type::Library
     -base,
-    -declare => qw( Address );
+    -declare => qw( Address RouteType CountryCode RegionCode );
 use Type::Utils -all;
 use Types::Standard -types;
 use namespace::autoclean;
@@ -24,5 +24,11 @@ Instance of L<Net::Async::Webservice::DHL::Address>.
 =cut
 
 class_type Address, { class => 'Net::Async::Webservice::DHL::Address' };
+
+enum RouteType, [qw(O D)];
+
+declare CountryCode, as Str, where { length($_) == 2 };
+
+enum RegionCode, [qw(AP EU AM)];
 
 1;

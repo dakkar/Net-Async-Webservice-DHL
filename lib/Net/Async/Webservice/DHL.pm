@@ -5,7 +5,7 @@ use Types::URI qw(Uri);
 use Types::DateTime
     DateTime => { -as => 'DateTimeT' },
     Format => { -as => 'DTFormat' };
-use Net::Async::Webservice::DHL::Types qw(Address);
+use Net::Async::Webservice::DHL::Types qw(Address RouteType RegionCode CountryCode);
 use Net::Async::Webservice::DHL::Exception;
 use Type::Params qw(compile);
 use Error::TypeTiny;
@@ -13,6 +13,7 @@ use Try::Tiny;
 use List::AllUtils 'pairwise';
 use HTTP::Request;
 use XML::Compile::Cache;
+use XML::Compile::Util 'type_of_node';
 use XML::LibXML;
 use Encode;
 use namespace::autoclean;
@@ -175,12 +176,22 @@ sub _build__xml_cache {
             elements_qualified => 'TOP',
         },
     );
-    for my $f (qw(datatypes DCT-req DCT-Response DCTRequestdatatypes DCTResponsedatatypes err-res)) {
+    for my $f (qw(datatypes datatypes_global
+                  DCT-req DCTRequestdatatypes
+                  DCT-Response DCTResponsedatatypes
+                  routing-global-req routing-global-res
+                  routing-err-res err-res)) {
         $c->importDefinitions("$f.xsd");
     }
     $c->declare('WRITER' => '{http://www.dhl.com}DCTRequest');
     $c->declare('READER' => '{http://www.dhl.com}DCTResponse');
+
+    $c->declare('WRITER' => '{http://www.dhl.com}RouteRequest');
+    $c->declare('READER' => '{http://www.dhl.com}RouteResponse');
+    $c->declare('READER' => '{http://www.dhl.com}RoutingErrorResponse');
+
     $c->declare('READER' => '{http://www.dhl.com}ErrorResponse');
+
     $c->compileAll;
 
     return $c;
@@ -238,6 +249,8 @@ Optional parameters:
 the date/time for the booking, defaults to I<now>; it will converted to UTC time zone
 = C<product_code>
 a DHL product code
+= C<message_reference>
+a string, to uniquely identify individual messages
 
 Performs a C<GetCapability> request. Lots of values in the request are
 not filled in, this should be used essentially to check for address
@@ -250,6 +263,13 @@ L<XML::Compile::Schema>), or fail with an exception.
 
 =cut
 
+sub _mr {
+    if ($_[0]->{message_reference}) {
+        return ( message_reference => $_[0]->{message_reference} );
+    }
+    return;
+}
+
 sub get_capability {
     state $argcheck = compile(
         Object,
@@ -261,6 +281,7 @@ sub get_capability {
             shipment_value => Num,
             product_code => Optional[Str],
             date => Optional[DateTimeT->plus_coercions(DTFormat['ISO8601'])],
+            message_reference => Optional[Str],
         ],
     );
     my ($self,$args) = $argcheck->(@_);
@@ -270,8 +291,8 @@ sub get_capability {
         : DateTime->now(time_zone => 'UTC');
 
     my $req = {
-        From => $args->{from}->as_hash,
-        To => $args->{to}->as_hash,
+        From => $args->{from}->as_hash('capability'),
+        To => $args->{to}->as_hash('capability'),
         BkgDetails => {
             PaymentCountryCode => $args->{to}->country_code,
             Date => $args->{date}->ymd,
@@ -298,6 +319,68 @@ sub get_capability {
     return $self->xml_request({
         data => $req,
         request_method => 'GetCapability',
+        _mr($args),
+    })->then(
+        sub {
+            my ($response) = @_;
+            return Future->wrap($response);
+        },
+    );
+}
+
+=method C<route_request>
+
+ $dhl->route_request({
+   region_code => $dhl_region_code,
+   routing_type => 'O', # or 'D'
+   address => $address,
+   origin_country_code => $country_code,
+ }) ==> ($hashref)
+
+C<address> is an instance of L<Net::Async::Webservice::DHL::Address>.
+C<type> is C<O> for origin routing, or C<D> for destination
+routing. C<origin_country_code> is the "country code of origin"
+according to the DHL spec.
+
+Optional parameters:
+
+=for :list
+= C<message_reference>
+a string, to uniquely identify individual messages
+
+Performs a C<RouteRequest> request.
+
+The L<Future> returned will yield a hashref containing the
+"interesting" bits of the XML response (as judged by
+L<XML::Compile::Schema>), or fail with an exception.
+
+=cut
+
+sub route_request {
+    state $argcheck = compile(
+        Object,
+        Dict[
+            region_code => RegionCode,
+            routing_type => RouteType,
+            address => Address,
+            origin_country_code => CountryCode,
+            message_reference => Optional[Str],
+        ],
+    );
+    my ($self,$args) = $argcheck->(@_);
+
+    my $req = {
+        RequestType => $args->{routing_type},
+        RegionCode => $args->{region_code},
+        OriginCountryCode => $args->{origin_country_code},
+        %{$args->{address}->as_hash('route')},
+        schemaVersion => '1.0',
+    };
+
+    return $self->xml_request({
+        data => $req,
+        request_method => 'RouteRequest',
+        _mr($args),
     })->then(
         sub {
             my ($response) = @_;
@@ -316,18 +399,23 @@ sub get_capability {
 This method is mostly internal, you shouldn't need to call it.
 
 It builds a request XML document by passing the given C<data> to an
-L<XML::Compile> writer built on the DHL C<DCTRequest> schema.
+L<XML::Compile> writer built on the DHL schema.
 
 It then posts (possibly asynchronously) this to the L</base_url> (see
 the L</post> method). If the request is successful, it parses the body
-with a L<XML::Compile> reader, either the one for C<DCTResponse> or
-the one for C<ErrorResponse>, depending on the document element. If
-it's C<DCTResponse>, the Future is completed with the hashref returned
-by the reader. If it's C<ErrorResponse>, teh Future is failed with a
+with a L<XML::Compile> reader, either the one for the response or the
+one for C<ErrorResponse>, depending on the document element. If it's a
+valid response, the Future is completed with the hashref returned by
+the reader. If it's C<ErrorResponse>, teh Future is failed with a
 L<Net::Async::Webservice::DHL::Exception::DHLError> contaning the
 response status.
 
 =cut
+
+my %request_type_map = (
+    GetCapability => ['GetCapability','DCTRequest','DCTResponse'],
+    RouteRequest => ['','RouteRequest','RouteResponse'],
+);
 
 sub xml_request {
     state $argcheck = compile(
@@ -336,9 +424,13 @@ sub xml_request {
             data => HashRef,
             request_method => Str,
             message_time => Optional[DateTimeT->plus_coercions(DTFormat['ISO8601'])],
+            message_reference => Optional[Str],
         ],
     );
     my ($self, $args) = $argcheck->(@_);
+
+    my ($top_level_elemel,$req_type,$res_type) =
+        @{ $request_type_map{$args->{request_method}} || [] };
 
     $args->{message_time} = $args->{message_time}
         ? $args->{message_time}->clone->set_time_zone('UTC')
@@ -346,20 +438,23 @@ sub xml_request {
 
     my $doc = XML::LibXML::Document->new('1.0','utf-8');
 
-    my $writer = $self->_xml_cache->writer('{http://www.dhl.com}DCTRequest');
+    my $writer = $self->_xml_cache->writer("{http://www.dhl.com}$req_type");
 
     my $req = {
-        $args->{request_method} => {
-            Request => {
-                ServiceHeader => {
-                    MessageTime => $args->{message_time}->iso8601,
-                    SiteID => $self->username,
-                    Password => $self->password,
-                },
+        Request => {
+            ServiceHeader => {
+                MessageTime => $args->{message_time}->iso8601,
+                SiteID => $self->username,
+                Password => $self->password,
+                MessageReference => (sprintf '% 28s',($args->{message_reference} // time())),
             },
-            %{$args->{data}},
         },
+        %{$args->{data}},
     };
+
+    if ($top_level_elemel) {
+        $req = { $top_level_elemel => $req };
+    }
 
     my $docElem = $writer->($doc,$req);
     $doc->setDocumentElement($docElem);
@@ -377,20 +472,21 @@ sub xml_request {
                 no_network => 1,
             );
 
-            if ($response_doc->documentElement->nodeName =~ /:DCTResponse$/) {
-                my $reader = $self->_xml_cache->reader('{http://www.dhl.com}DCTResponse');
-                my $response = $reader->($response_doc);
-                return Future->wrap($response);
-            }
-            else {
-                my $reader = $self->_xml_cache->reader('{http://www.dhl.com}ErrorResponse');
-                my $response = $reader->($response_doc);
+            my $type = type_of_node $response_doc->documentElement;
+
+            my $reader = $self->_xml_cache->reader($type);
+            my $response = $reader->($response_doc);
+
+            if ($response_doc->documentElement->nodeName =~ /Error/) {
                 return Future->new->fail(
                     Net::Async::Webservice::DHL::Exception::DHLError->new({
                         error => $response->{Response}{Status}
                     }),
                     'dhl',
                 );
+            }
+            else {
+                return Future->wrap($response);
             }
         }
     );
