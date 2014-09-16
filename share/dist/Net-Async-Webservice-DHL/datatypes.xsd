@@ -1167,7 +1167,7 @@
 					<xsd:documentation>Time this message is sent</xsd:documentation>
 				</xsd:annotation>
 			</xsd:element>
-			<xsd:element name="MessageReference" type="MessageReferenceLax">
+			<xsd:element name="MessageReference" type="MessageReferenceLax" minOccurs="0">
 				<xsd:annotation>
 					<xsd:documentation>A string, peferably number, to uniquely identify
 						individual messages. Minimum length must be 28 and maximum length
