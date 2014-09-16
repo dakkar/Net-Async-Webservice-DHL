@@ -1,6 +1,7 @@
 {{$NEXT}}
  - route request call
  - added optional message reference to all calls
+ - remove the included Net::Async::Webservice::Common
 
 1.1.1     2014-07-29 11:14:40+01:00 Europe/London
  - use SingleEncoding (thanks sergeyromanov)
