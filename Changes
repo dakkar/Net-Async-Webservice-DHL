@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.2.0     2014-09-22 14:24:11+01:00 Europe/London
  - route request call
  - added optional message reference to all calls
  - remove the included Net::Async::Webservice::Common
