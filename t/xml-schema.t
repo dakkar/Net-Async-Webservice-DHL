@@ -13,6 +13,7 @@ subtest 'parse failure response' => sub {
      <Response>
          <ServiceHeader>
              <MessageTime>2014-04-14T15:43:57+01:00</MessageTime>
+             <MessageReference>foo</MessageReference>
              <SiteID>testid</SiteID>
          </ServiceHeader>
          <Status>

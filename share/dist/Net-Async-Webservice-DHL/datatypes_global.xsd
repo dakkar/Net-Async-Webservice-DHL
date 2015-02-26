@@ -1251,6 +1251,7 @@
 				minOccurs="0" />
 			<xsd:element name="CommunicationType" type="CommunicationType"
 				minOccurs="0" />
+			<xsd:element name="SpecialServiceDesc" type="SpecialServiceDesc" minOccurs="0" />
 			<xsd:element name="ChargeValue" type="Money" minOccurs="0" />
 			<xsd:element name="CurrencyCode" type="CurrencyCode"
 				minOccurs="0" />
@@ -1265,6 +1266,15 @@
 			<xsd:maxLength value="3" />
 		</xsd:restriction>
 	</xsd:simpleType>
+		<xsd:simpleType name="SpecialServiceDesc">
+		<xsd:annotation>
+			<xsd:documentation>Special Service Description</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="45" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
 	<xsd:simpleType name="ChargeValue">
 		<xsd:annotation>
 			<xsd:documentation>ChargeValue</xsd:documentation>
@@ -1480,6 +1490,7 @@
 				</xsd:annotation>
 			</xsd:element>
 			<xsd:element name="SiteID" type="SiteID" />
+			<xsd:element name="Password" type="Password" minOccurs="0" />
 		</xsd:sequence>
 	</xsd:complexType>
 	<xsd:complexType name="Status">
@@ -2078,6 +2089,7 @@
 			<xsd:enumeration value="8X4_thermal" />
 			<xsd:enumeration value="8X4_A4_TC_PDF" />
 			<xsd:enumeration value="6X4_A4_PDF" />
+			<xsd:enumeration value="6X4_thermal" />
 			<xsd:enumeration value="8X4_CI_PDF" />
 			<xsd:enumeration value="8X4_CI_thermal" />
 		</xsd:restriction>

@@ -1,4 +1,7 @@
 {{$NEXT}}
+ - update to newer DHL schemas
+ - an ErrorResponse for "wrong password" contains the Password element,
+   even if DHL's schema does not say so
 
 1.2.0     2014-09-22 14:24:11+01:00 Europe/London
  - route request call
