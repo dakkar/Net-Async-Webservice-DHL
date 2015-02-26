@@ -1,5 +1,3 @@
-{{$NEXT}}
-
 1.2.1     2015-02-26 12:00:14+00:00 Europe/London
  - update to newer DHL schemas
  - an ErrorResponse for "wrong password" contains the Password element,
