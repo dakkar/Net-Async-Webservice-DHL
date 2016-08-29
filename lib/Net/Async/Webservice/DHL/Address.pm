@@ -3,6 +3,7 @@ use Moo;
 use 5.010;
 use Types::Standard qw(Str Int Bool StrictNum);
 use Net::Async::Webservice::DHL::Types ':types';
+# VERSION
 
 # ABSTRACT: an address for DHL
 

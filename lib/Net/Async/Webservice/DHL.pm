@@ -21,6 +21,7 @@ use Future;
 use DateTime;
 use File::ShareDir 'dist_dir';
 use 5.010;
+# VERSION
 
 # ABSTRACT: DHL API client, non-blocking
 

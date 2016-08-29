@@ -1,9 +1,8 @@
 package Net::Async::Webservice::DHL::Exception;
 use strict;
+# VERSION
 
-=head1 NAME
-
-Net::Async::Webservice::DHL::Exception - exception classes for DHL
+# ABSTRACT: exception classes for DHL
 
 =head1 DESCRIPTION
 

@@ -7,6 +7,7 @@ use Type::Library
 use Type::Utils -all;
 use Types::Standard -types;
 use namespace::autoclean;
+# VERSION
 
 # ABSTRACT: type library for DHL
 
