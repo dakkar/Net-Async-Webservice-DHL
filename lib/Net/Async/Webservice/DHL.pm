@@ -21,80 +21,16 @@ use Future;
 use DateTime;
 use File::ShareDir 'dist_dir';
 use 5.010;
-# VERSION
+our $VERSION = '1.2.2'; # VERSION
 
 # ABSTRACT: DHL API client, non-blocking
 
-=head1 SYNOPSIS
-
- use IO::Async::Loop;
- use Net::Async::Webservice::DHL;
- use Data::Printer;
-
- my $loop = IO::Async::Loop->new;
-
- my $dhl = Net::Async::Webservice::DHL->new({
-   config_file => $ENV{HOME}.'/.naws_dhl.conf',
-   loop => $loop,
- });
-
- $dhl->get_capability({
-   from => $address_a,
-   to => $address_b,
-   is_dutiable => 0,
-   currency_code => 'GBP',
-   shipment_value => 100,
- })->then(sub {
-   my ($response) = @_;
-   p $response;
-   return Future->wrap();
- });
-
- $loop->run;
-
-Alternatively:
-
- use Net::Async::Webservice::DHL;
- use Data::Printer;
-
- my $ups = Net::Async::Webservice::DHL->new({
-   config_file => $ENV{HOME}.'/.naws_dhl.conf',
-   user_agent => LWP::UserAgent->new,
- });
-
- my $response = $dhl->get_capability({
-   from => $address_a,
-   to => $address_b,
-   is_dutiable => 0,
-   currency_code => 'GBP',
-   shipment_value => 100,
- })->get;
-
- p $response;
-
-=head1 DESCRIPTION
-
-This class implements some of the methods of the DHL XML-PI API, using
-L<Net::Async::HTTP> as a user agent I<by default> (you can still pass
-something like L<LWP::UserAgent> and it will work). All methods that
-perform API calls return L<Future>s (if using a synchronous user
-agent, all the Futures will be returned already completed).
-
-=cut
 
 my %base_urls = (
     live => 'https://xmlpi-ea.dhl.com/XMLShippingServlet',
     test => 'https://xmlpitest-ea.dhl.com/XMLShippingServlet',
 );
 
-=attr C<live_mode>
-
-Boolean, defaults to false. When set to true, the live API endpoint
-will be used, otherwise the test one will. Flipping this attribute
-will reset L</base_url>, so you generally don't want to touch this if
-you're using some custom API endpoint.
-
-=cut
 
 has live_mode => (
     is => 'rw',
@@ -103,18 +39,6 @@ has live_mode => (
     default => sub { 0 },
 );
 
-=attr C<base_url>
-
-A L<URI> object, coercible from a string. The base URL to use to send
-API requests to. Defaults to the standard DHL endpoints:
-
-=for :list
-* C<https://xmlpi-ea.dhl.com/XMLShippingServlet> for live
-* C<https://xmlpitest-ea.dhl.com/XMLShippingServlet> for testing
-
-See also L</live_mode>.
-
-=cut
 
 has base_url => (
     is => 'lazy',
@@ -133,13 +57,6 @@ sub _build_base_url { ## no critic(ProhibitUnusedPrivateSubroutines)
     return $base_urls{$self->live_mode ? 'live' : 'test'};
 }
 
-=attr C<username>
-
-=attr C<password>
-
-Strings, required. Authentication credentials.
-
-=cut
 
 has username => (
     is => 'ro',
@@ -152,14 +69,6 @@ has password => (
     required => 1,
 );
 
-=attr C<user_agent>
-
-A user agent object, looking either like L<Net::Async::HTTP> (has
-C<do_request> and C<POST>) or like L<LWP::UserAgent> (has C<request>
-and C<post>). You can pass the C<loop> constructor parameter to get a
-default L<Net::Async::HTTP> instance.
-
-=cut
 
 with 'Net::Async::Webservice::Common::WithUserAgent';
 
@@ -198,71 +107,9 @@ sub _build__xml_cache { ## no critic(ProhibitUnusedPrivateSubroutines)
     return $c;
 }
 
-=method C<new>
-
-Async:
-
-  my $dhl = Net::Async::Webservice::DHL->new({
-     loop => $loop,
-     config_file => $file_name,
-  });
-
-Sync:
-
-  my $dhl = Net::Async::Webservice::DHL->new({
-     user_agent => LWP::UserAgent->new,
-     config_file => $file_name,
-  });
-
-In addition to passing all the various attributes values, you can use
-a few shortcuts.
-
-=for :list
-= C<loop>
-a L<IO::Async::Loop>; a locally-constructed L<Net::Async::HTTP> will be registered to it and set as L</user_agent>
-= C<config_file>
-a path name; will be parsed with L<Config::Any>, and the values used as if they had been passed in to the constructor
-
-=for Pod::Coverage
-BUILDARGS
-
-=cut
 
 with 'Net::Async::Webservice::Common::WithConfigFile';
 
-=method C<get_capability>
-
- $dhl->get_capability({
-   from => $address_a,
-   to => $address_b,
-   is_dutiable => 0,
-   currency_code => 'GBP',
-   shipment_value => 100,
- }) ==> ($hashref)
-
-C<from> and C<to> are instances of
-L<Net::Async::Webservice::DHL::Address>, C<is_dutiable> is a boolean.
-
-Optional parameters:
-
-=for :list
-= C<date>
-the date/time for the booking, defaults to I<now>; it will converted to UTC time zone
-= C<product_code>
-a DHL product code
-= C<message_reference>
-a string, to uniquely identify individual messages
-
-Performs a C<GetCapability> request. Lots of values in the request are
-not filled in, this should be used essentially to check for address
-validity and little more. I'm not sure how to read the response,
-either.
-
-The L<Future> returned will yield a hashref containing the
-"interesting" bits of the XML response (as judged by
-L<XML::Compile::Schema>), or fail with an exception.
-
-=cut
 
 sub _mr {
     if ($_[0]->{message_reference}) {
@@ -329,33 +176,6 @@ sub get_capability {
     );
 }
 
-=method C<route_request>
-
- $dhl->route_request({
-   region_code => $dhl_region_code,
-   routing_type => 'O', # or 'D'
-   address => $address,
-   origin_country_code => $country_code,
- }) ==> ($hashref)
-
-C<address> is an instance of L<Net::Async::Webservice::DHL::Address>.
-C<type> is C<O> for origin routing, or C<D> for destination
-routing. C<origin_country_code> is the "country code of origin"
-according to the DHL spec.
-
-Optional parameters:
-
-=for :list
-= C<message_reference>
-a string, to uniquely identify individual messages
-
-Performs a C<RouteRequest> request.
-
-The L<Future> returned will yield a hashref containing the
-"interesting" bits of the XML response (as judged by
-L<XML::Compile::Schema>), or fail with an exception.
-
-=cut
 
 sub route_request {
     state $argcheck = compile(
@@ -390,28 +210,6 @@ sub route_request {
     );
 }
 
-=method C<xml_request>
-
-  $dhl->xml_request({
-    request_method => $string,
-    data => \%request_data,
-  }) ==> ($parsed_response);
-
-This method is mostly internal, you shouldn't need to call it.
-
-It builds a request XML document by passing the given C<data> to an
-L<XML::Compile> writer built on the DHL schema.
-
-It then posts (possibly asynchronously) this to the L</base_url> (see
-the L</post> method). If the request is successful, it parses the body
-with a L<XML::Compile> reader, either the one for the response or the
-one for C<ErrorResponse>, depending on the document element. If it's a
-valid response, the Future is completed with the hashref returned by
-the reader. If it's C<ErrorResponse>, teh Future is failed with a
-L<Net::Async::Webservice::DHL::Exception::DHLError> contaning the
-response status.
-
-=cut
 
 my %request_type_map = (
     GetCapability => ['GetCapability','DCTRequest','DCTResponse'],
@@ -493,7 +291,246 @@ sub xml_request {
     );
 }
 
-=method C<post>
+
+with 'Net::Async::Webservice::Common::WithRequestWrapper';
+
+1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Net::Async::Webservice::DHL - DHL API client, non-blocking
+
+=head1 VERSION
+
+version 1.2.2
+
+=head1 SYNOPSIS
+
+ use IO::Async::Loop;
+ use Net::Async::Webservice::DHL;
+ use Data::Printer;
+
+ my $loop = IO::Async::Loop->new;
+
+ my $dhl = Net::Async::Webservice::DHL->new({
+   config_file => $ENV{HOME}.'/.naws_dhl.conf',
+   loop => $loop,
+ });
+
+ $dhl->get_capability({
+   from => $address_a,
+   to => $address_b,
+   is_dutiable => 0,
+   currency_code => 'GBP',
+   shipment_value => 100,
+ })->then(sub {
+   my ($response) = @_;
+   p $response;
+   return Future->wrap();
+ });
+
+ $loop->run;
+
+Alternatively:
+
+ use Net::Async::Webservice::DHL;
+ use Data::Printer;
+
+ my $ups = Net::Async::Webservice::DHL->new({
+   config_file => $ENV{HOME}.'/.naws_dhl.conf',
+   user_agent => LWP::UserAgent->new,
+ });
+
+ my $response = $dhl->get_capability({
+   from => $address_a,
+   to => $address_b,
+   is_dutiable => 0,
+   currency_code => 'GBP',
+   shipment_value => 100,
+ })->get;
+
+ p $response;
+
+=head1 DESCRIPTION
+
+This class implements some of the methods of the DHL XML-PI API, using
+L<Net::Async::HTTP> as a user agent I<by default> (you can still pass
+something like L<LWP::UserAgent> and it will work). All methods that
+perform API calls return L<Future>s (if using a synchronous user
+agent, all the Futures will be returned already completed).
+
+=head1 ATTRIBUTES
+
+=head2 C<live_mode>
+
+Boolean, defaults to false. When set to true, the live API endpoint
+will be used, otherwise the test one will. Flipping this attribute
+will reset L</base_url>, so you generally don't want to touch this if
+you're using some custom API endpoint.
+
+=head2 C<base_url>
+
+A L<URI> object, coercible from a string. The base URL to use to send
+API requests to. Defaults to the standard DHL endpoints:
+
+=over 4
+
+=item *
+
+C<https://xmlpi-ea.dhl.com/XMLShippingServlet> for live
+
+=item *
+
+C<https://xmlpitest-ea.dhl.com/XMLShippingServlet> for testing
+
+=back
+
+See also L</live_mode>.
+
+=head2 C<username>
+
+=head2 C<password>
+
+Strings, required. Authentication credentials.
+
+=head2 C<user_agent>
+
+A user agent object, looking either like L<Net::Async::HTTP> (has
+C<do_request> and C<POST>) or like L<LWP::UserAgent> (has C<request>
+and C<post>). You can pass the C<loop> constructor parameter to get a
+default L<Net::Async::HTTP> instance.
+
+=head1 METHODS
+
+=head2 C<new>
+
+Async:
+
+  my $dhl = Net::Async::Webservice::DHL->new({
+     loop => $loop,
+     config_file => $file_name,
+  });
+
+Sync:
+
+  my $dhl = Net::Async::Webservice::DHL->new({
+     user_agent => LWP::UserAgent->new,
+     config_file => $file_name,
+  });
+
+In addition to passing all the various attributes values, you can use
+a few shortcuts.
+
+=over 4
+
+=item C<loop>
+
+a L<IO::Async::Loop>; a locally-constructed L<Net::Async::HTTP> will be registered to it and set as L</user_agent>
+
+=item C<config_file>
+
+a path name; will be parsed with L<Config::Any>, and the values used as if they had been passed in to the constructor
+
+=back
+
+=head2 C<get_capability>
+
+ $dhl->get_capability({
+   from => $address_a,
+   to => $address_b,
+   is_dutiable => 0,
+   currency_code => 'GBP',
+   shipment_value => 100,
+ }) ==> ($hashref)
+
+C<from> and C<to> are instances of
+L<Net::Async::Webservice::DHL::Address>, C<is_dutiable> is a boolean.
+
+Optional parameters:
+
+=over 4
+
+=item C<date>
+
+the date/time for the booking, defaults to I<now>; it will converted to UTC time zone
+
+=item C<product_code>
+
+a DHL product code
+
+=item C<message_reference>
+
+a string, to uniquely identify individual messages
+
+=back
+
+Performs a C<GetCapability> request. Lots of values in the request are
+not filled in, this should be used essentially to check for address
+validity and little more. I'm not sure how to read the response,
+either.
+
+The L<Future> returned will yield a hashref containing the
+"interesting" bits of the XML response (as judged by
+L<XML::Compile::Schema>), or fail with an exception.
+
+=head2 C<route_request>
+
+ $dhl->route_request({
+   region_code => $dhl_region_code,
+   routing_type => 'O', # or 'D'
+   address => $address,
+   origin_country_code => $country_code,
+ }) ==> ($hashref)
+
+C<address> is an instance of L<Net::Async::Webservice::DHL::Address>.
+C<type> is C<O> for origin routing, or C<D> for destination
+routing. C<origin_country_code> is the "country code of origin"
+according to the DHL spec.
+
+Optional parameters:
+
+=over 4
+
+=item C<message_reference>
+
+a string, to uniquely identify individual messages
+
+=back
+
+Performs a C<RouteRequest> request.
+
+The L<Future> returned will yield a hashref containing the
+"interesting" bits of the XML response (as judged by
+L<XML::Compile::Schema>), or fail with an exception.
+
+=head2 C<xml_request>
+
+  $dhl->xml_request({
+    request_method => $string,
+    data => \%request_data,
+  }) ==> ($parsed_response);
+
+This method is mostly internal, you shouldn't need to call it.
+
+It builds a request XML document by passing the given C<data> to an
+L<XML::Compile> writer built on the DHL schema.
+
+It then posts (possibly asynchronously) this to the L</base_url> (see
+the L</post> method). If the request is successful, it parses the body
+with a L<XML::Compile> reader, either the one for the response or the
+one for C<ErrorResponse>, depending on the document element. If it's a
+valid response, the Future is completed with the hashref returned by
+the reader. If it's C<ErrorResponse>, teh Future is failed with a
+L<Net::Async::Webservice::DHL::Exception::DHLError> contaning the
+response status.
+
+=head2 C<post>
 
   $dhl->post($body) ==> ($decoded_content)
 
@@ -502,8 +539,17 @@ successful, it completes the returned future with the decoded content
 of the response, otherwise it fails the future with a
 L<Net::Async::Webservice::Common::Exception::HTTPError> instance.
 
+=for Pod::Coverage BUILDARGS
+
+=head1 AUTHOR
+
+Gianni Ceccarelli <dakkar@thenautilus.net>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2016 by Net-a-porter.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
 =cut
-
-with 'Net::Async::Webservice::Common::WithRequestWrapper';
-
-1;

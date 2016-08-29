@@ -1,46 +1,18 @@
 package Net::Async::Webservice::DHL::Exception;
 use strict;
 use warnings;
-# VERSION
+our $VERSION = '1.2.2'; # VERSION
 
 # ABSTRACT: exception classes for DHL
 
-=head1 DESCRIPTION
-
-These classes are based on L<Throwable> and L<StackTrace::Auto>. The
-L</as_string> method should return something readable, with a full
-stack trace.  Their base class is
-L<Net::Async::Webservice::Common::Exception>.
-
-=head1 Classes
-
-=cut
 
 {package Net::Async::Webservice::DHL::Exception::ConfigError; ## no critic(ProhibitMultiplePackages)
  use Moo;
  extends 'Net::Async::Webservice::Common::Exception';
 
-=head2 C<Net::Async::Webservice::DHL::Exception::ConfigError>
-
-exception thrown when the configuration file can't be parsed
-
-=head3 Attributes
-
-=head4 C<file>
-
-The name of the configuration file.
-
-=cut
 
  has file => ( is => 'ro', required => 1 );
 
-=head3 Methods
-
-=head4 C<as_string>
-
-Mentions the file name, and gives the stack trace.
-
-=cut
 
  sub as_string {
      my ($self) = @_;
@@ -55,27 +27,9 @@ Mentions the file name, and gives the stack trace.
  use Moo;
  extends 'Net::Async::Webservice::Common::Exception';
 
-=head2 C<Net::Async::Webservice::DHL::Exception::DHLError>
-
-exception thrown when DHL signals an error
-
-=head3 Attributes
-
-=head4 C<error>
-
-The error data structure extracted from the DHL response.
-
-=cut
 
  has error => ( is => 'ro', required => 1 );
 
-=head3 Methods
-
-=head4 C<as_string>
-
-Mentions the description and code of the error, plus the stack trace.
-
-=cut
 
  sub as_string {
      my ($self) = @_;
@@ -90,3 +44,71 @@ Mentions the description and code of the error, plus the stack trace.
 }
 
 1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Net::Async::Webservice::DHL::Exception - exception classes for DHL
+
+=head1 VERSION
+
+version 1.2.2
+
+=head1 DESCRIPTION
+
+These classes are based on L<Throwable> and L<StackTrace::Auto>. The
+L</as_string> method should return something readable, with a full
+stack trace.  Their base class is
+L<Net::Async::Webservice::Common::Exception>.
+
+=head1 Classes
+
+=head2 C<Net::Async::Webservice::DHL::Exception::ConfigError>
+
+exception thrown when the configuration file can't be parsed
+
+=head3 Attributes
+
+=head4 C<file>
+
+The name of the configuration file.
+
+=head3 Methods
+
+=head4 C<as_string>
+
+Mentions the file name, and gives the stack trace.
+
+=head2 C<Net::Async::Webservice::DHL::Exception::DHLError>
+
+exception thrown when DHL signals an error
+
+=head3 Attributes
+
+=head4 C<error>
+
+The error data structure extracted from the DHL response.
+
+=head3 Methods
+
+=head4 C<as_string>
+
+Mentions the description and code of the error, plus the stack trace.
+
+=head1 AUTHOR
+
+Gianni Ceccarelli <dakkar@thenautilus.net>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2016 by Net-a-porter.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
