@@ -2,6 +2,9 @@ package Test::Net::Async::Webservice::DHL;
 use strict;
 use warnings;
 use Test::Most;
+use Test::File::ShareDir -share => {
+    -dist => { 'Net-Async-Webservice-DHL' => 'share/' },
+};
 use Data::Printer;
 use Net::Async::Webservice::DHL::Address;
 
