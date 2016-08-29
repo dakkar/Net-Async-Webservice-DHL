@@ -1,5 +1,6 @@
 package Net::Async::Webservice::DHL::Exception;
 use strict;
+use warnings;
 # VERSION
 
 # ABSTRACT: exception classes for DHL
@@ -15,7 +16,7 @@ L<Net::Async::Webservice::Common::Exception>.
 
 =cut
 
-{package Net::Async::Webservice::DHL::Exception::ConfigError;
+{package Net::Async::Webservice::DHL::Exception::ConfigError; ## no critic(ProhibitMultiplePackages)
  use Moo;
  extends 'Net::Async::Webservice::Common::Exception';
 
@@ -50,7 +51,7 @@ Mentions the file name, and gives the stack trace.
  }
 }
 
-{package Net::Async::Webservice::DHL::Exception::DHLError;
+{package Net::Async::Webservice::DHL::Exception::DHLError; ## no critic(ProhibitMultiplePackages)
  use Moo;
  extends 'Net::Async::Webservice::Common::Exception';
 

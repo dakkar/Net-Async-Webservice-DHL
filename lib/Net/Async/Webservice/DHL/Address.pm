@@ -93,42 +93,37 @@ address.
 
 =cut
 
-{
-our $_self;
-sub _if {
-    my ($method,$key) = @_;
-    if ($_self->$method) {
-        return ( $key => $_self->$method );
-    }
-    return;
-};
-
 sub as_hash {
     my ($self,$shape) = @_;
-    local $_self=$self;
+    my $if = sub {
+        my ($method,$key) = @_;
+        if ($self->$method) {
+            return ( $key => $self->$method );
+        }
+        return;
+    };
 
     if ($shape eq 'capability') {
         return {
-            _if(postal_code => 'Postalcode'),
-            _if(city => 'City'),
+            $if->(postal_code => 'Postalcode'),
+            $if->(city => 'City'),
             CountryCode => $self->country_code,
         };
     }
     elsif ($shape eq 'route') {
         return {
-            _if(line1 => 'Address1'),
-            _if(line2 => 'Address2'),
-            _if(line3 => 'Address3'),
-            _if(postal_code => 'PostalCode'),
-            _if(city => 'City'),
-            _if(division => 'Division'),
+            $if->(line1 => 'Address1'),
+            $if->(line2 => 'Address2'),
+            $if->(line3 => 'Address3'),
+            $if->(postal_code => 'PostalCode'),
+            $if->(city => 'City'),
+            $if->(division => 'Division'),
             CountryCode => $self->country_code,
             CountryName => '', # the value is required, but an empty
                                # string will do
-            _if(country_name => 'CountryName'),
+            $if->(country_name => 'CountryName'),
         };
     };
-}
 }
 
 1;

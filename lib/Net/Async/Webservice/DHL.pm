@@ -122,12 +122,12 @@ has base_url => (
     clearer => '_clear_base_url',
 );
 
-sub _trigger_live_mode {
+sub _trigger_live_mode { ## no critic(ProhibitUnusedPrivateSubroutines)
     my ($self) = @_;
 
     $self->_clear_base_url;
 }
-sub _build_base_url {
+sub _build_base_url { ## no critic(ProhibitUnusedPrivateSubroutines)
     my ($self) = @_;
 
     return $base_urls{$self->live_mode ? 'live' : 'test'};
@@ -167,7 +167,7 @@ has _xml_cache => (
     is => 'lazy',
 );
 
-sub _build__xml_cache {
+sub _build__xml_cache { ## no critic(ProhibitUnusedPrivateSubroutines)
     my ($self) = @_;
 
     my $dir = dist_dir('Net-Async-Webservice-DHL');

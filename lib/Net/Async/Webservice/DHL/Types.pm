@@ -28,7 +28,7 @@ class_type Address, { class => 'Net::Async::Webservice::DHL::Address' };
 
 enum RouteType, [qw(O D)];
 
-declare CountryCode, as Str, where { length($_) == 2 };
+declare CountryCode, as Str, where { length == 2 };
 
 enum RegionCode, [qw(AP EU AM)];
 
