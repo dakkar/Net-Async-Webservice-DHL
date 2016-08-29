@@ -1,5 +1,6 @@
 {{$NEXT}}
  - fix RT#114084 (avoid File::ShareDir::ProjectDistDir), thanks Ether
+ - minor code and dist.ini cleanup
 
 1.2.1     2015-02-26 12:00:14+00:00 Europe/London
  - update to newer DHL schemas
