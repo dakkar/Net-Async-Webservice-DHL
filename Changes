@@ -1,4 +1,6 @@
 {{$NEXT}}
+
+1.2.2     2016-08-29 16:03:43+01:00 Europe/London
  - fix RT#114084 (avoid File::ShareDir::ProjectDistDir), thanks Ether
  - minor code and dist.ini cleanup
 
